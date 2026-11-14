@@ -21,6 +21,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.ShapedRecipe;
 
 /**
  * Native EMI adapter for the Forge 1.20.1 field guide. This class is only loaded when EMI is present;
@@ -180,25 +182,51 @@ public final class EmiRecipeViewer implements RecipeViewer {
 
         @Override
         public int width() {
-            return 108;
+            return 134;
         }
 
         @Override
         public int height() {
-            return 22;
+            return 58;
         }
 
         @Override
         public void draw(GuiGraphics graphics, int x, int y, int mouseX, int mouseY) {
-            List<ItemStack> inputs = inputs();
-            for (int i = 0; i < Math.min(4, inputs.size()); i++) {
-                if (!inputs.get(i).isEmpty()) graphics.renderItem(inputs.get(i), x + 2 + i * 18, y + 2);
+            // Preserve the actual pattern for vanilla shaped recipes (stairs, tools, armor, etc.).
+            // EMI ingredients are alternatives, so the guide previews the first representative stack per slot.
+            net.minecraft.world.item.crafting.Recipe<?> backing = recipe.getBackingRecipe();
+            if (backing instanceof ShapedRecipe shaped) {
+                List<Ingredient> ingredients = shaped.getIngredients();
+                int recipeWidth = shaped.getWidth();
+                int recipeHeight = shaped.getHeight();
+                for (int row = 0; row < recipeHeight; row++) {
+                    for (int col = 0; col < recipeWidth; col++) {
+                        int index = row * recipeWidth + col;
+                        if (index >= ingredients.size()) continue;
+                        ItemStack[] choices = ingredients.get(index).getItems();
+                        if (choices.length > 0 && !choices[0].isEmpty()) {
+                            graphics.renderItem(choices[0], x + 2 + col * 18, y + 2 + row * 18);
+                        }
+                    }
+                }
+            } else {
+                // Non-vanilla and shapeless recipes have no public positional layout in EMI's recipe API.
+                // Use a compact 3-column grid rather than falsely presenting every ingredient in one row.
+                List<EmiIngredient> ingredients = recipe.getInputs();
+                for (int i = 0; i < Math.min(9, ingredients.size()); i++) {
+                    List<EmiStack> choices = ingredients.get(i).getEmiStacks();
+                    if (choices.isEmpty()) continue;
+                    ItemStack stack = choices.get(0).getItemStack();
+                    if (!stack.isEmpty()) {
+                        graphics.renderItem(stack, x + 2 + (i % 3) * 18, y + 2 + (i / 3) * 18);
+                    }
+                }
             }
-            graphics.drawString(Minecraft.getInstance().font, "→", x + 74, y + 7, 0xFF5A4A37, false);
+            graphics.drawString(Minecraft.getInstance().font, "→", x + 76, y + 24, 0xFF5A4A37, false);
             for (EmiStack output : recipe.getOutputs()) {
                 ItemStack stack = output.getItemStack();
                 if (!stack.isEmpty()) {
-                    graphics.renderItem(stack, x + 90, y + 2);
+                    graphics.renderItem(stack, x + 108, y + 20);
                     break;
                 }
             }
