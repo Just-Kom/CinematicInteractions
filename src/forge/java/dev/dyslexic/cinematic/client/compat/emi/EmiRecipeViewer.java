@@ -135,7 +135,17 @@ public final class EmiRecipeViewer implements RecipeViewer {
         Cinematic.LOGGER.info("[Cinematic] EMI show recipes: item={}, matches={}, screen={}",
                 BuiltInRegistries.ITEM.getKey(stack.getItem()), manager.getRecipesByOutput(target).size(),
                 Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
-        Scene.consult(() -> { Minecraft mc = Minecraft.getInstance(); if (mc.player == null) return; mc.setScreen(new InventoryScreen(mc.player)); EmiApi.displayRecipes(target); });
+        Scene.consult(() -> {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null) return;
+            mc.setScreen(new InventoryScreen(mc.player));
+            Cinematic.LOGGER.info("[Cinematic] EMI temporary parent: screen={}, handled={}",
+                    mc.screen == null ? "none" : mc.screen.getClass().getName(),
+                    EmiApi.getHandledScreen() == null ? "none" : EmiApi.getHandledScreen().getClass().getName());
+            EmiApi.displayRecipes(target);
+            Cinematic.LOGGER.info("[Cinematic] EMI displayRecipes call finished: screen={}",
+                    mc.screen == null ? "none" : mc.screen.getClass().getName());
+        });
         Cinematic.LOGGER.info("[Cinematic] EMI show recipes returned: screen={}",
                 Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
     }
@@ -146,7 +156,17 @@ public final class EmiRecipeViewer implements RecipeViewer {
         Cinematic.LOGGER.info("[Cinematic] EMI show uses: item={}, matches={}, screen={}",
                 BuiltInRegistries.ITEM.getKey(stack.getItem()), manager.getRecipesByInput(target).size(),
                 Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
-        Scene.consult(() -> { Minecraft mc = Minecraft.getInstance(); if (mc.player == null) return; mc.setScreen(new InventoryScreen(mc.player)); EmiApi.displayUses(target); });
+        Scene.consult(() -> {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null) return;
+            mc.setScreen(new InventoryScreen(mc.player));
+            Cinematic.LOGGER.info("[Cinematic] EMI temporary parent: screen={}, handled={}",
+                    mc.screen == null ? "none" : mc.screen.getClass().getName(),
+                    EmiApi.getHandledScreen() == null ? "none" : EmiApi.getHandledScreen().getClass().getName());
+            EmiApi.displayUses(target);
+            Cinematic.LOGGER.info("[Cinematic] EMI displayUses call finished: screen={}",
+                    mc.screen == null ? "none" : mc.screen.getClass().getName());
+        });
         Cinematic.LOGGER.info("[Cinematic] EMI show uses returned: screen={}",
                 Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
     }
