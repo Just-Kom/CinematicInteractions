@@ -693,7 +693,9 @@ public final class CinematicClient {
                 }
             }
             if (next instanceof InventoryScreen) {
-                if (Scene.phase != Scene.Phase.OUTRO) event.setCanceled(true);
+                // EMI needs a temporary inventory parent before it can install its recipe screen.
+                // Allow that handoff only while the field guide is explicitly consulting the viewer.
+                if (Scene.phase != Scene.Phase.OUTRO && !Scene.consulting) event.setCanceled(true);
             } else if (Scene.phase == Scene.Phase.ACTIVE && next != null && !next.isPauseScreen() && !Scene.consulting) {
                 // something else took over the screen (a server menu, another mod): drop the scene at once
                 Scene.drop();
