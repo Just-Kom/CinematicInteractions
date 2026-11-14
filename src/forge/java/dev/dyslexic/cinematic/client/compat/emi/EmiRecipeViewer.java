@@ -17,6 +17,8 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import dev.dyslexic.cinematic.client.Scene;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -133,7 +135,7 @@ public final class EmiRecipeViewer implements RecipeViewer {
         Cinematic.LOGGER.info("[Cinematic] EMI show recipes: item={}, matches={}, screen={}",
                 BuiltInRegistries.ITEM.getKey(stack.getItem()), manager.getRecipesByOutput(target).size(),
                 Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
-        EmiApi.displayRecipes(target);
+        Scene.consult(() -> { Minecraft mc = Minecraft.getInstance(); if (mc.player == null) return; mc.setScreen(new InventoryScreen(mc.player)); EmiApi.displayRecipes(target); });
         Cinematic.LOGGER.info("[Cinematic] EMI show recipes returned: screen={}",
                 Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
     }
@@ -144,7 +146,7 @@ public final class EmiRecipeViewer implements RecipeViewer {
         Cinematic.LOGGER.info("[Cinematic] EMI show uses: item={}, matches={}, screen={}",
                 BuiltInRegistries.ITEM.getKey(stack.getItem()), manager.getRecipesByInput(target).size(),
                 Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
-        EmiApi.displayUses(target);
+        Scene.consult(() -> { Minecraft mc = Minecraft.getInstance(); if (mc.player == null) return; mc.setScreen(new InventoryScreen(mc.player)); EmiApi.displayUses(target); });
         Cinematic.LOGGER.info("[Cinematic] EMI show uses returned: screen={}",
                 Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
     }
@@ -261,7 +263,7 @@ public final class EmiRecipeViewer implements RecipeViewer {
             Cinematic.LOGGER.info("[Cinematic] EMI open recipe: id={}, category={}, screen={}",
                     recipe.getId(), recipe.getCategory().getId(),
                     Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
-            EmiApi.displayRecipe(recipe);
+            Scene.consult(() -> { Minecraft mc = Minecraft.getInstance(); if (mc.player == null) return; mc.setScreen(new InventoryScreen(mc.player)); EmiApi.displayRecipe(recipe); });
             Cinematic.LOGGER.info("[Cinematic] EMI open recipe returned: screen={}",
                     Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
         }
