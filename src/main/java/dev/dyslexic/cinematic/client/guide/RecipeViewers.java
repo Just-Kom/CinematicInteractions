@@ -17,15 +17,23 @@ public final class RecipeViewers {
     private static boolean emiFailed;
     private static boolean jeiFailed;
 
+    /** Load the Forge-only adapter without making shared sources depend on a Forge-only class. */
+    @Nullable
+    private static RecipeViewer loadForgeEmi() throws ReflectiveOperationException {
+        Class<?> adapter = Class.forName("dev.dyslexic.cinematic.client.compat.emi.EmiRecipeViewer");
+        Object viewer = adapter.getMethod("current").invoke(null);
+        return viewer instanceof RecipeViewer recipeViewer ? recipeViewer : null;
+    }
+
     /** The viewer once its runtime is ready (after the world has loaded its recipes), else null. */
     @Nullable
     public static RecipeViewer get() {
         //? if forge {
         if (!emiFailed && ModList.get().isLoaded("emi")) {
             try {
-                RecipeViewer viewer = dev.dyslexic.cinematic.client.compat.emi.EmiRecipeViewer.current();
+                RecipeViewer viewer = loadForgeEmi();
                 if (viewer != null) return viewer;
-            } catch (LinkageError | RuntimeException e) {
+            } catch (ReflectiveOperationException | LinkageError | RuntimeException e) {
                 emiFailed = true;
                 Cinematic.LOGGER.warn("[Cinematic] EMI integration unavailable; trying the next recipe viewer", e);
             }
