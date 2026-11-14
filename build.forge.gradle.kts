@@ -158,6 +158,8 @@ val generateModMetadata = tasks.register<ProcessResources>("generateModMetadata"
 }
 val v1201 = rootProject.file("src/1.20.1/resources").toPath()
 sourceSets.main {
+    // EMI adapter is isolated here because it is a Forge-only optional integration.
+    java.srcDir(rootProject.file("src/forge/java"))
     // 1.20.1 has its own translations: the shared ones are left out
     resources.srcDir(v1201)
     resources.exclude { it.relativePath.pathString.startsWith("assets/cinematic/lang/") && !it.file.toPath().startsWith(v1201) }
