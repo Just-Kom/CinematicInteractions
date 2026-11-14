@@ -112,7 +112,18 @@ public final class EmiRecipeViewer implements RecipeViewer {
                 if (hasOutput(recipe, output)) found.add(new EmiStationRecipe(recipe));
             }
         }
+        // Put real shaped crafting recipes (tools, armor, stairs, etc.) before EMI's synthetic
+        // two-of-the-same-item repair recipe, which otherwise tends to appear first.
+        found.sort(Comparator.comparingInt(EmiRecipeViewer::recipePriority));
         return List.copyOf(found);
+    }
+
+    private static int recipePriority(StationRecipe stationRecipe) {
+        if (!(stationRecipe instanceof EmiStationRecipe emi)) return 5;
+        net.minecraft.world.item.crafting.Recipe<?> backing = emi.recipe.getBackingRecipe();
+        if (backing instanceof ShapedRecipe) return 0;
+        if (backing != null) return 1;
+        return 10;
     }
 
     @Override
