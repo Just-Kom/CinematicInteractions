@@ -372,21 +372,27 @@ public final class SettingsScreen extends Screen {
         };
     }
 
+    private final class PresetButton extends Button {
+        private PresetButton() {
+            super(0, 0, CONTROL, 20, Component.empty(), button -> {
+                Preset now = preset();
+                choose(Preset.values()[now == Preset.CUSTOM ? Preset.BALANCED.ordinal() : (now.ordinal() + 1) % Preset.CUSTOM.ordinal()]);
+                dirty = true;
+            }, narration -> narration.get());
+        }
+
+        @Override
+        public Component getMessage() {
+            Preset now = preset();
+            return now.title().copy().withStyle(now == Preset.CUSTOM ? ChatFormatting.GOLD : ChatFormatting.WHITE);
+        }
+    }
+
     private Option presetOption() {
         return new Option(Tab.CAMERA, Component.translatable("cinematic.settings.preset"), Component.translatable("cinematic.settings.preset.tooltip")) {
             @Override
             AbstractWidget control() {
-                return new Button(0, 0, CONTROL, 20, Component.empty(), button -> {
-                    Preset now = preset();
-                    choose(Preset.values()[now == Preset.CUSTOM ? Preset.BALANCED.ordinal() : (now.ordinal() + 1) % Preset.CUSTOM.ordinal()]);
-                    dirty = true;
-                }, narration -> narration.get()) {
-                    @Override
-                    public Component getMessage() {
-                        Preset now = preset();
-                        return now.title().copy().withStyle(now == Preset.CUSTOM ? ChatFormatting.GOLD : ChatFormatting.WHITE);
-                    }
-                };
+                return new PresetButton();
             }
 
             @Override
