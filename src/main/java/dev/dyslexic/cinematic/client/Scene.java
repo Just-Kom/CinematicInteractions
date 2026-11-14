@@ -155,13 +155,24 @@ public final class Scene {
     /** Opens a viewer's page over the scene. */
     static void consult(Runnable open) {
         if (phase != Phase.ACTIVE) {
+            Cinematic.LOGGER.warn("[Cinematic] Ignored recipe viewer action because the scene is not active (phase={})", phase);
             return;
         }
         consulting = true;
-        open.run();
-        if (Minecraft.getInstance().screen instanceof SceneScreen) {
-            // the viewer had nothing to show and kept our screen
+        try {
+            open.run();
+        } catch (RuntimeException | LinkageError e) {
             consulting = false;
+            Cinematic.LOGGER.error("[Cinematic] Recipe viewer action failed", e);
+            return;
+        }
+        if (Minecraft.getInstance().screen instanceof SceneScreen) {
+            // The viewer had nothing to show and kept our screen.
+            consulting = false;
+            Cinematic.LOGGER.warn("[Cinematic] Recipe viewer action returned without opening a screen");
+        } else {
+            Cinematic.LOGGER.info("[Cinematic] Recipe viewer screen opened: {}", Minecraft.getInstance().screen == null
+                    ? "none" : Minecraft.getInstance().screen.getClass().getName());
         }
     }
 
