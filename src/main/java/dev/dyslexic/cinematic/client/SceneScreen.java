@@ -1,6 +1,5 @@
 package dev.dyslexic.cinematic.client;
 
-import dev.dyslexic.cinematic.Cinematic;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
