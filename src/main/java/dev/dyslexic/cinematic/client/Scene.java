@@ -12,6 +12,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -941,8 +942,8 @@ public final class Scene {
             abort();
             return;
         }
-        if (consulting && mc.screen == null) {
-            // the viewer closed without handing our screen back: return to the work, or step away if it is gone
+        if (consulting && (mc.screen == null || mc.screen instanceof InventoryScreen)) {
+            // EMI returns to its vanilla inventory parent when its recipe screen closes; restore the active scene.
             consulting = false;
             if (phase == Phase.ACTIVE && stillAt()) {
                 mc.setScreen(new SceneScreen());
