@@ -490,6 +490,8 @@ public final class SceneScreen extends Screen {
             }
             return true;
         }
+        // The field guide is drawn above the inventory and station UI; let it consume its clicks first.
+        if (guideShown() && guide.click(mx, my, button)) return true;
         inventoryEffects.action(hasShiftDown() ? ClickType.QUICK_MOVE : ClickType.PICKUP);
         //? if <1.21 {
         /*RecipeChoiceStrip choices = Scene.station.choices();
@@ -499,9 +501,6 @@ public final class SceneScreen extends Screen {
             if (picked != -2) return true;
         }
         *///?}
-        if (guideShown() && guide.click(mx, my, button)) {
-            return true;
-        }
         if (Scene.station instanceof TableStation table && table.recipeBook.click(mx, my, button)) {
             table.release(button);
             return true;

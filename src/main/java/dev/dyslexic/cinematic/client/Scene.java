@@ -12,6 +12,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.player.Input;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -151,17 +152,42 @@ public final class Scene {
      * session and the open menu stay) and work goes on when the viewer hands the screen back.
      */
     static boolean consulting;
+    /** Whether EMI has replaced its temporary inventory parent with the actual recipe screen. */
+    private static boolean consultingViewerOpened;
+    /** Clock time at which the temporary inventory screen was installed. */
+    private static double consultingStartedAt;
 
     /** Opens a viewer's page over the scene. */
-    static void consult(Runnable open) {
+    public static void consult(Runnable open) {
         if (phase != Phase.ACTIVE) {
+            Cinematic.LOGGER.warn("[Cinematic] Ignored recipe viewer action because the scene is not active (phase={})", phase);
             return;
         }
         consulting = true;
-        open.run();
-        if (Minecraft.getInstance().screen instanceof SceneScreen) {
-            // the viewer had nothing to show and kept our screen
+        consultingViewerOpened = false;
+        consultingStartedAt = clock;
+        try {
+            open.run();
+        } catch (RuntimeException | LinkageError e) {
             consulting = false;
+            consultingViewerOpened = false;
+            Cinematic.LOGGER.error("[Cinematic] Recipe viewer action failed", e);
+            return;
+        }
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.screen instanceof SceneScreen) {
+            // The adapter did not even leave the scene screen.
+            consulting = false;
+            consultingViewerOpened = false;
+            Cinematic.LOGGER.warn("[Cinematic] Recipe viewer action returned without opening a screen");
+        } else if (mc.screen instanceof InventoryScreen) {
+            // EMI may finish opening its recipe screen on the next client tick. Do not restore the
+            // scene just because its temporary inventory parent is visible for a moment.
+            Cinematic.LOGGER.info("[Cinematic] Recipe viewer is waiting on EMI to open its recipe screen");
+        } else {
+            consultingViewerOpened = true;
+            Cinematic.LOGGER.info("[Cinematic] Recipe viewer screen opened: {}",
+                    mc.screen == null ? "none" : mc.screen.getClass().getName());
         }
     }
 
@@ -171,6 +197,7 @@ public final class Scene {
             return;
         }
         consulting = false;
+        consultingViewerOpened = false;
         if (phase == Phase.ACTIVE && !stillAt()) {
             leave();
         }
@@ -747,6 +774,8 @@ public final class Scene {
         transitionFrom = null;
         neighbor = null;
         consulting = false;
+        consultingViewerOpened = false;
+        consultingStartedAt = 0;
         if (phase != Phase.OUTRO && station != null) {
             station.onEnd();
         }
@@ -930,13 +959,29 @@ public final class Scene {
             abort();
             return;
         }
-        if (consulting && mc.screen == null) {
-            // the viewer closed without handing our screen back: return to the work, or step away if it is gone
-            consulting = false;
-            if (phase == Phase.ACTIVE && stillAt()) {
-                mc.setScreen(new SceneScreen());
-            } else {
-                leave();
+        if (consulting) {
+            // The inventory is only a temporary parent while EMI constructs its recipe screen.
+            // Remember that EMI actually opened a different screen before treating a return to the
+            // inventory as the user closing the viewer.
+            if (!consultingViewerOpened && mc.screen != null
+                    && !(mc.screen instanceof InventoryScreen) && !(mc.screen instanceof SceneScreen)) {
+                consultingViewerOpened = true;
+                Cinematic.LOGGER.info("[Cinematic] Detected recipe viewer screen: {}", mc.screen.getClass().getName());
+            }
+            boolean returnedToInventory = consultingViewerOpened
+                    && (mc.screen == null || mc.screen instanceof InventoryScreen);
+            boolean openingTimedOut = !consultingViewerOpened && clock - consultingStartedAt > 2.0;
+            if (returnedToInventory || openingTimedOut) {
+                consulting = false;
+                consultingViewerOpened = false;
+                if (openingTimedOut) {
+                    Cinematic.LOGGER.warn("[Cinematic] Recipe viewer did not open within 2 seconds; restoring the scene");
+                }
+                if (phase == Phase.ACTIVE && stillAt()) {
+                    mc.setScreen(new SceneScreen());
+                } else {
+                    leave();
+                }
             }
         }
         if (clientOnly && phase != Phase.OUTRO && (player.containerMenu == player.inventoryMenu

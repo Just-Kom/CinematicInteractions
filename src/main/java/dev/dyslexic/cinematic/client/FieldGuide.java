@@ -1,5 +1,6 @@
 package dev.dyslexic.cinematic.client;
 
+import dev.dyslexic.cinematic.Cinematic;
 import dev.dyslexic.cinematic.client.guide.RecipeViewer;
 import dev.dyslexic.cinematic.client.guide.RecipeViewers;
 import java.util.ArrayList;
@@ -341,9 +342,20 @@ final class FieldGuide {
         if (selected == null) return buttons;
         RecipeViewer.StationRecipe recipe = recipes.isEmpty() ? null : recipes.get(recipeIndex);
         if (recipe != null && canHint(recipe)) buttons.add(new Button(station instanceof TableStation ? "show_table" : "show_furnace", () -> hint(recipe)));
-        if (recipe != null) buttons.add(new Button("open_recipe", () -> Scene.consult(recipe::open)));
-        buttons.add(new Button("how_to_get", () -> Scene.consult(() -> viewer().showHowToGet(selected))));
-        buttons.add(new Button("uses", () -> Scene.consult(() -> viewer().showUses(selected))));
+        if (recipe != null) buttons.add(new Button("open_recipe", () -> {
+            Cinematic.LOGGER.info("[Cinematic] Field guide button clicked: open_recipe");
+            recipe.open();
+        }));
+        RecipeViewer activeViewer = viewer();
+        ItemStack target = selected.copy();
+        buttons.add(new Button("how_to_get", () -> {
+            Cinematic.LOGGER.info("[Cinematic] Field guide button clicked: how_to_get, item={}", BuiltInRegistries.ITEM.getKey(target.getItem()));
+            if (activeViewer != null) activeViewer.showHowToGet(target);
+        }));
+        buttons.add(new Button("uses", () -> {
+            Cinematic.LOGGER.info("[Cinematic] Field guide button clicked: uses, item={}", BuiltInRegistries.ITEM.getKey(target.getItem()));
+            if (activeViewer != null) activeViewer.showUses(target);
+        }));
         int bx = rightPage() + 6, bw = PAGE_W - 12, by = H - COVER - 4 - buttons.size() * 14;
         for (Button b : buttons) {
             b.x = bx;
@@ -515,7 +527,12 @@ final class FieldGuide {
                 else if (mx >= rightPage() + PAGE_W - 14) recipeIndex = (recipeIndex + 1) % recipes.size();
                 return true;
             }
-            for (Button b : recipeButtons()) if (b.over(mx, my)) { b.action.run(); return true; }
+            for (Button b : recipeButtons()) if (b.over(mx, my)) {
+                Cinematic.LOGGER.info("[Cinematic] Field guide hit button: key={}, mouse=({}, {}), bounds=({}, {}, {})",
+                        b.key, mx, my, b.x, b.y, b.w);
+                b.action.run();
+                return true;
+            }
         } else if (tab == Tab.SOURCES) {
             int ly = 26;
             for (RecipeViewer.SourcePage source : sources) {

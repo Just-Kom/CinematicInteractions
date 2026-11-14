@@ -65,8 +65,12 @@ public final class Fx {
      * depth, so overlapping pieces of it blend instead of fighting over which is in front, and pulled a little towards
      * the camera, so it never flickers against the face it lies on.
      */
-    public static final RenderType HIGHLIGHT = new RenderType("cinematic_highlight", DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS,
-            1536, false, true, () -> {
+    public static final RenderType HIGHLIGHT = new HighlightRenderType();
+
+    /** Named subclass avoids a Forge 1.20.1 javac collision in anonymous RenderType constructors. */
+    private static final class HighlightRenderType extends RenderType {
+        private HighlightRenderType() {
+            super("cinematic_highlight", DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS, 1536, false, true, () -> {
                 RenderSystem.setShader(GameRenderer::getPositionColorShader);
                 RenderSystem.enableBlend();
                 RenderSystem.defaultBlendFunc();
@@ -80,7 +84,9 @@ public final class Fx {
                 RenderSystem.depthMask(true);
                 RenderSystem.enableCull();
                 RenderSystem.disableBlend();
-            }) {};
+            });
+        }
+    }
 
     // ---- sparks ------------------------------------------------------------------------------------
 

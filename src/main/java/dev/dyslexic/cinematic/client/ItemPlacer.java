@@ -136,23 +136,30 @@ public final class ItemPlacer {
 
     /** Keep each model's texture (including special block items), but allow its vertex alpha to blend. */
     private static RenderType fadingType(RenderType original) {
-        return new RenderType("cinematic_fading_item", original.format(), original.mode(), original.bufferSize(), false, true, () -> {
-            original.setupRenderState();
-            //? if !forge {
-            if (isEntityFormat(original)) {
-            //?} else if forge {
-            /*if (original.format() == DefaultVertexFormat.NEW_ENTITY) {
-            *///?}
-                RenderSystem.setShader(GameRenderer::getRendertypeEntityTranslucentShader);
-            }
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            RenderSystem.depthMask(false);
-        }, () -> {
-            original.clearRenderState();
-            RenderSystem.depthMask(true);
-            RenderSystem.disableBlend();
-        }) {};
+        return new FadingRenderType(original);
+    }
+
+    /** Named subclass avoids a Forge 1.20.1 javac collision in anonymous RenderType constructors. */
+    private static final class FadingRenderType extends RenderType {
+        private FadingRenderType(RenderType original) {
+            super("cinematic_fading_item", original.format(), original.mode(), original.bufferSize(), false, true, () -> {
+                original.setupRenderState();
+                //? if !forge {
+                if (isEntityFormat(original)) {
+                //?} else if forge {
+                /*if (original.format() == DefaultVertexFormat.NEW_ENTITY) {
+                *///?}
+                    RenderSystem.setShader(GameRenderer::getRendertypeEntityTranslucentShader);
+                }
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+                RenderSystem.depthMask(false);
+            }, () -> {
+                original.clearRenderState();
+                RenderSystem.depthMask(true);
+                RenderSystem.disableBlend();
+            });
+        }
     }
 
     /** Conservative footprint of the normal resting model, including its small yaw and stack scatter. */
