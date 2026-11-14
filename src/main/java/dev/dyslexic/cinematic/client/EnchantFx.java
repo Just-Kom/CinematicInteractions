@@ -40,13 +40,20 @@ public final class EnchantFx {
     private static final RenderType SURFACE_CIRCLE = noDepthWrite(RenderType.entityTranslucent(PIXEL_CIRCLE, false));
 
     private static RenderType noDepthWrite(RenderType original) {
-        return new RenderType("cinematic_enchant_surface", original.format(), original.mode(), original.bufferSize(), false, true, () -> {
-            original.setupRenderState();
-            com.mojang.blaze3d.systems.RenderSystem.depthMask(false);
-        }, () -> {
-            original.clearRenderState();
-            com.mojang.blaze3d.systems.RenderSystem.depthMask(true);
-        }) {};
+        return new NoDepthWriteRenderType(original);
+    }
+
+    /** Named subclass avoids a Forge 1.20.1 javac collision in anonymous RenderType constructors. */
+    private static final class NoDepthWriteRenderType extends RenderType {
+        private NoDepthWriteRenderType(RenderType original) {
+            super("cinematic_enchant_surface", original.format(), original.mode(), original.bufferSize(), false, true, () -> {
+                original.setupRenderState();
+                com.mojang.blaze3d.systems.RenderSystem.depthMask(false);
+            }, () -> {
+                original.clearRenderState();
+                com.mojang.blaze3d.systems.RenderSystem.depthMask(true);
+            });
+        }
     }
 
     public static final double LAPIS_RADIUS = 0.115;
