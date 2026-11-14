@@ -154,7 +154,7 @@ public final class Scene {
     static boolean consulting;
 
     /** Opens a viewer's page over the scene. */
-    static void consult(Runnable open) {
+    public static void consult(Runnable open) {
         if (phase != Phase.ACTIVE) {
             Cinematic.LOGGER.warn("[Cinematic] Ignored recipe viewer action because the scene is not active (phase={})", phase);
             return;
