@@ -1,5 +1,6 @@
 package dev.dyslexic.cinematic.client.compat.emi;
 
+import dev.dyslexic.cinematic.Cinematic;
 import dev.dyslexic.cinematic.client.guide.RecipeViewer;
 import dev.emi.emi.api.EmiApi;
 import dev.emi.emi.api.recipe.EmiRecipe;
@@ -128,12 +129,24 @@ public final class EmiRecipeViewer implements RecipeViewer {
 
     @Override
     public void showHowToGet(ItemStack stack) {
-        EmiApi.displayRecipes(EmiStack.of(stack));
+        EmiStack target = EmiStack.of(stack);
+        Cinematic.LOGGER.info("[Cinematic] EMI show recipes: item={}, matches={}, screen={}",
+                BuiltInRegistries.ITEM.getKey(stack.getItem()), manager.getRecipesByOutput(target).size(),
+                Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
+        EmiApi.displayRecipes(target);
+        Cinematic.LOGGER.info("[Cinematic] EMI show recipes returned: screen={}",
+                Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
     }
 
     @Override
     public void showUses(ItemStack stack) {
-        EmiApi.displayUses(EmiStack.of(stack));
+        EmiStack target = EmiStack.of(stack);
+        Cinematic.LOGGER.info("[Cinematic] EMI show uses: item={}, matches={}, screen={}",
+                BuiltInRegistries.ITEM.getKey(stack.getItem()), manager.getRecipesByInput(target).size(),
+                Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
+        EmiApi.displayUses(target);
+        Cinematic.LOGGER.info("[Cinematic] EMI show uses returned: screen={}",
+                Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
     }
 
     @Override
@@ -245,7 +258,12 @@ public final class EmiRecipeViewer implements RecipeViewer {
 
         @Override
         public void open() {
+            Cinematic.LOGGER.info("[Cinematic] EMI open recipe: id={}, category={}, screen={}",
+                    recipe.getId(), recipe.getCategory().getId(),
+                    Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
             EmiApi.displayRecipe(recipe);
+            Cinematic.LOGGER.info("[Cinematic] EMI open recipe returned: screen={}",
+                    Minecraft.getInstance().screen == null ? "none" : Minecraft.getInstance().screen.getClass().getName());
         }
     }
 }
